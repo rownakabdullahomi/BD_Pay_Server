@@ -72,7 +72,9 @@ async function run() {
             const result = await userCollection.insertOne({ ...user, timestamp: Date.now() });
             res.send(result);
         })
-        app.post("/create-initial-user-balance", verifyToken,async (req, res) => {
+
+        // post initial balance for user
+        app.post("/create-initial-user-balance", verifyToken, async (req, res) => {
             const balanceData = req.body;
             // check if the user already exists...
             const query = { email: balanceData.email, phone: balanceData.phone }
@@ -81,13 +83,30 @@ async function run() {
             if (existingUser) {
                 return res.send({ message: "user already exists", insertedId: null });
             }
-            const result = await transactionCollection.insertOne({ 
-                ...balanceData, 
+            const result = await transactionCollection.insertOne({
+                ...balanceData,
                 transactionAmount: 40.00,
                 transactionType: "in",
                 currentBalance: 40.00, // Adding balance field
-                timestamp: Date.now() 
-              });
+                timestamp: Date.now()
+            });
+            res.send(result);
+        })
+
+        // get a specific user data
+        app.get("/user/role/:email", verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const result = await userCollection.findOne(query);
+            res.send(result);
+        })
+
+        // get updated data of an user
+        app.get("/user-updated-data/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const result = await transactionCollection.findOne(query,
+                { sort: { timestamp: -1 } });
             res.send(result);
         })
 
