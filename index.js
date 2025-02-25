@@ -94,7 +94,7 @@ async function run() {
         })
 
         // get a specific user data
-        app.get("/user/role/:email", verifyToken, async (req, res) => {
+        app.get("/user/:email", verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { email }
             const result = await userCollection.findOne(query);
@@ -109,9 +109,31 @@ async function run() {
                 { sort: { timestamp: -1 } });
             res.send(result);
         })
+        // get updated data of an user by phone
+        app.get("/updated-data/:phone", async (req, res) => {
+            const phone = req.params.phone;
+            const query = { phone }
+            const result = await transactionCollection.findOne(query,
+                { sort: { timestamp: -1 } });
+            res.send(result);
+        })
 
-
-
+        // post transaction data of sender 
+        app.post("/update-sender-balance", async(req, res)=>{
+          const transactionData = req.body;
+          const result = await transactionCollection.insertOne(
+            {...transactionData, timestamp: Date.now()})
+            res.send(result);
+            
+        })
+        // post transaction data of receiver 
+        app.post("/update-receiver-balance", async(req, res)=>{
+            const transactionData = req.body;
+            const result = await transactionCollection.insertOne(
+              {...transactionData, timestamp: Date.now()})
+              res.send(result);
+              
+          })
 
 
 
