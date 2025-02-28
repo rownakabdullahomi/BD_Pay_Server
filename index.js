@@ -59,19 +59,29 @@ async function run() {
         }
 
 
-
+        // post a new user
         app.post("/users", async (req, res) => {
             const user = req.body;
-            // check if the user already exists...
-            const query = { email: user.email, nid: user.nid, phone: user.phone }
+        
+            // Check if the user already exists based on email, nid, or phone
+            const query = { $or: [{ email: user.email }, { nid: user.nid }, { phone: user.phone }] };
             const existingUser = await userCollection.findOne(query);
-
+        
             if (existingUser) {
-                return res.send({ message: "user already exists", insertedId: null });
+                return res.send({ message: "User email / nid / phone number already exists", insertedId: null });
             }
-            const result = await userCollection.insertOne({ ...user, timestamp: Date.now() });
+        
+            // Add status field if the role is "Agent"
+            const newUser = {
+                ...user,
+                timestamp: Date.now(),
+                ...(user.role === "Agent" && { status: "pending" })
+            };
+        
+            const result = await userCollection.insertOne(newUser);
             res.send(result);
-        })
+        });
+        
 
         // post initial balance for user
         app.post("/create-initial-user-balance", verifyToken, async (req, res) => {
